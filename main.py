@@ -2,6 +2,7 @@ import pygame
 from player import Player
 from enemy import Enemy
 from Shield import Shield
+from Medkit import Medkit
 import random
 
 pygame.init()
@@ -11,7 +12,8 @@ screen = pygame.display.set_mode((1280, 720))
 velocity = pygame.math.Vector2(0, 0)
 speed = 2
 
-player = Player(100, 100)
+player = Player(640, 360)
+
 
 running = True
 
@@ -28,6 +30,7 @@ wh = 128
 
 chungus_chance = 8
 tank_chance = 25
+red_slime_chance = 25
 
 previous_chance_increase = pygame.time.get_ticks()
 
@@ -49,7 +52,11 @@ def pickup_spawn_manager(last_pickup_spawn):
 
         if now - last_pickup_spawn > pickup_spawn_time:
             last_pickup_spawn = now
-            pickups.add(Shield(random.randint(32, 1248), random.randint(32, 688)))
+            if random.randint(0, 1) == 0:
+                pickups.add(Shield(random.randint(32, 1248), random.randint(32, 688)))
+            else:
+                pickups.add(Medkit(random.randint(32, 1248), random.randint(32, 688)))
+
     return last_pickup_spawn
 
 
@@ -62,22 +69,26 @@ def enemy_spawn_manager(last_spawn):
     x, y = 0, 0
     if xoffsetter == 1: x = 1480
     elif xoffsetter == 2: x = -1480
-    elif xoffsetter == 3: x = 0
+    elif xoffsetter == 3: x = -80
 
     if yoffsetter == 1: y = 920
     elif yoffsetter == 2: y = -920
-    elif yoffsetter == 3: y = 0
+    elif yoffsetter == 3: y = -80
 
-    x += random.randint(-200, 200)
-    y += random.randint(-200, 200)
+    if random.randint(0, 1) == 0:
+        x = random.randint(0, 1480)
+    else:
+        y = random.randint(0, 920)
 
     if now - last_spawn >= spawn_time:
         chungus = random.randint(0, 100)
         if chungus > 0 and chungus < tank_chance:
             tank = Enemy(x, y, 128, 128, 120)
             enemies.add(tank)
-        elif chungus > tank_chance and chungus < chungus_chance+tank_chance:
+        elif chungus > tank_chance and chungus < chungus_chance+tank_chance and player.lvl > 0:
             enemies.add(Enemy(x, y, 256, 256, 250))
+        elif chungus > chungus_chance+tank_chance and chungus < chungus_chance+tank_chance+red_slime_chance and player.lvl > 1:
+            enemies.add(Enemy(x, y, 80, 80, 85))
         else:
             enemies.add(Enemy(x, y, 80, 80, 65))
         last_spawn = pygame.time.get_ticks()
@@ -134,6 +145,8 @@ while running:
     for hit_pickup in hit_pickups:
         if hit_pickup.id == "shield":
             player.set_shielded_true()
+        elif hit_pickup.id == "medkit":
+            player.heal()
         hit_pickup.kill()
 
     for projectile in projectiles:
@@ -147,8 +160,8 @@ while running:
         if pygame.sprite.collide_mask(player, enemy):
             if player.shielded:
                 enemy.kill()
-                player.lose_hp()
-            elif player.lose_hp(): running = False
+                player.lose_hp(enemy.dmg)
+            elif player.lose_hp(enemy.dmg): running = False
             break
 
     pygame.display.update()
@@ -160,7 +173,7 @@ while running:
     spawn_time -= 0.001
 
     now = pygame.time.get_ticks()
-    if now - previous_chance_increase >= 34000:
+    if now - previous_chance_increase >= 12000:
         chungus_chance += 1
         tank_chance += 1
         previous_chance_increase = now

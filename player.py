@@ -75,7 +75,7 @@ class Player(pygame.sprite.Sprite):
         self.flipped = pygame.transform.flip(self.image, True, False)
 
 
-        shield = pygame.image.load("Assets/Weapons/shield_in_action.png").convert_alpha()
+        shield = pygame.image.load("Assets/Player/shield_in_action.png").convert_alpha()
         shield = pygame.transform.scale(shield, (120, 120))
 
         shield.blit(shield, (0, 0))
@@ -104,11 +104,16 @@ class Player(pygame.sprite.Sprite):
         self.shielded = True
         self.image = self.no_flip_shield
 
-    def lose_hp(self):
+    def heal(self):
+        self.hp += 30
+        if self.hp > self.max_hp:
+            self.hp = self.max_hp
+        self.hp_bar.value = self.hp
+    def lose_hp(self, amount):
         if not self.shielded:
             now = pygame.time.get_ticks()
             if now - self.last_hit > self.immune_time:
-                self.hp -= 10
+                self.hp -= amount
                 self.last_hit = now
                 self.hp_bar.value = self.hp
             if self.hp <= 0:
@@ -125,7 +130,7 @@ class Player(pygame.sprite.Sprite):
                 while self.xp >= self.max_xp:
                     self.xp -= self.max_xp
                     self.lvl += 1
-                    self.max_xp *= 1.2
+                    self.max_xp *= 1.3
                     self.xp_bar.max = self.max_xp
                     if not self.upgrading:
                         self.upgrade()
@@ -191,7 +196,7 @@ class Player(pygame.sprite.Sprite):
                 self.weapons_unlocked.append("spear")
                 self.upgrade_list.remove("spear")
         elif item == "dmg":
-            self.dmg += 2
+            self.dmg += 1
         elif item == "hp":
             self.hp += 30
             if self.hp > self.max_hp:
@@ -199,7 +204,7 @@ class Player(pygame.sprite.Sprite):
             self.hp_bar.value = self.hp
             self.hp_bar.max = self.max_hp
         elif item == "attack speed":
-            self.fire_rate -= 30
+            self.fire_rate *= 0.93
 
 
     def update(self, velocity, screen, enemies_group):

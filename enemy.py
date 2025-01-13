@@ -9,6 +9,7 @@ class Enemy(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.speed = 1
+        self.dmg = 10
         self.hp = hp
         self.xp_worth = self.hp//4
         self.mask = pygame.mask.from_surface(self.image)
@@ -22,6 +23,14 @@ class Enemy(pygame.sprite.Sprite):
         if self.hp == 120:
             self.is_tank = True
             self.image = tank_image
+            self.dmg = 30
+        elif self.hp == 85:
+            self.image = pygame.image.load("Assets/Enemies/red_slime.png").convert_alpha()
+            self.image = pygame.transform.scale(self.image, (w, h))
+            self.speed = 1.8
+            self.dmg = 15
+        elif self.hp > 120:
+            self.dmg = 25
 
         self.original = self.image
         self.rotatel = pygame.transform.rotate(self.image, 90)
